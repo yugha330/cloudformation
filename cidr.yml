@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: 2010-09-09
+Metadata:
+  'AWS::CloudFormation::Designer': {}
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+
+
+Outputs:
+  VpcId:
+    Value: !Ref VPC
+  PrimaryCidrBlock:
+    Value: !GetAtt VPC.CidrBlock
