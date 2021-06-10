@@ -1,0 +1,135 @@
+
+AWSTemplateFormatVersion: "2010-09-09"
+Description: A VPC Template
+Resources:
+  VPC: # IBM VPC Resource
+    Type: "AWS::EC2::VPC"
+    Properties: 
+      CidrBlock: 10.0.0.0/16
+      InstanceTenancy: default
+      Tags:
+       - Key: Name
+         Value: IBM
+
+  InternetGateway: # IBM Internet Gateway
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Name
+        Value: IBM-IGW  
+
+  AttachGateway: # Attach Internet Gateway - IBM VPC
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+         Ref: VPC
+      InternetGatewayId:
+         Ref: InternetGateway
+
+  PubSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: VPC
+      CidrBlock: 10.0.0.0/24
+      AvailabilityZone: "us-east-1a"
+      MapPublicIpOnLaunch: 'true'
+      Tags:
+      - Key: Name
+        Value: IBM-Pub-Subnet1
+
+  PubSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: VPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: "us-east-1b"
+      MapPublicIpOnLaunch: 'true'
+      Tags:
+      - Key: Name
+        Value: IBM-Pub-Subnet2
+
+  PvtSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: VPC
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: "us-east-1a"
+      MapPublicIpOnLaunch: 'false'
+      Tags:
+      - Key: Name
+        Value: IBM-Pvt-Subnet1
+
+  PubSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: VPC
+      CidrBlock: 10.0.3.0/24
+      AvailabilityZone: "us-east-1b"
+      MapPublicIpOnLaunch: 'false'
+      Tags:
+      - Key: Name
+        Value: IBM-Pvt-Subnet2
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: 
+        Ref: VPC      
+      Tags:
+      - Key: Name
+        Value: Public-RT
+
+  PublicRoute:   
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: 
+        Ref: PublicRouteTable    
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:  
+        Ref: InternetGateway  
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: 
+        Ref: VPC          
+      Tags:
+      - Key: Name
+        Value: Private-RT
+
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: 
+        Ref: PubSubnet1              
+      RouteTableId:  
+        Ref: PublicRouteTable
+
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: 
+        Ref: PubSubnet2                    
+      RouteTableId: 
+        Ref: PublicRouteTable      
+
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: 
+        Ref: PvtSubnet1
+      RouteTableId:  
+        Ref: PrivateRouteTable      
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: 
+        Ref: PvtSubnet2
+      RouteTableId: 
+        Ref: PrivateRouteTable            
