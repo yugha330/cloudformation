@@ -1,0 +1,97 @@
+
+AWSTemplateFormatVersion: "2010-09-09"
+Description: A sample template
+Resources:
+  TCSVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+      Tags:
+        - Key: Name
+          Value: TCS-VPC
+
+  TCSIGW:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+       - Key: Name
+         Value: TCSIGW
+
+  TCSAttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: TCSVPC
+      InternetGatewayId:
+        Ref: TCSIGW
+
+  TCSPUBSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: TCSVPC
+      CidrBlock: 10.0.0.0/24
+      AvailabilityZone: "ap-northeast-3a"
+      MapPublicIpOnLaunch: "true"
+      Tags:
+       - Key: Name
+         Value: TCS-PUB-SUB
+
+
+  TCSPVTSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: TCSVPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: "ap-northeast-3b"
+      MapPublicIpOnLaunch: "false"
+      Tags:
+       - Key: Name
+         Value: TCS-PVT-SUB
+
+  TCSPUBRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:  
+        Ref: TCSVPC
+      Tags:
+      - Key: Name
+        Value: TCSPUBRT
+
+  TCSPVTRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:  
+        Ref: TCSVPC
+      Tags:
+      - Key: Name
+        Value: TCSPVTRT
+
+  TCSPUBSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: 
+        Ref: TCSPUBSubnet             
+      RouteTableId:  
+        Ref: TCSPUBRouteTable
+
+  TCSPVTSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: 
+        Ref: TCSPVTSubnet             
+      RouteTableId:  
+        Ref: TCSPVTRouteTable
+
+  TCSRoute:
+    Type: AWS::EC2::Route
+    DependsOn: TCSAttachGateway
+    Properties:
+       RouteTableId:
+         Ref: TCSPUBRouteTable
+       DestinationCidrBlock: 0.0.0.0/0
+       GatewayId:
+         Ref: TCSIGW
